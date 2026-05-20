@@ -38,8 +38,8 @@ class Operator {
 
   void SetInputQueueLimit(int max_size, DropPolicy policy);
   void MetaFlow(FrameMeta meta);
-  void Start();
-  void Stop();
+  virtual void Start();
+  virtual void Stop();
 
  protected:
   virtual FrameMeta HandleFrameMeta(const FrameMeta& meta) = 0;

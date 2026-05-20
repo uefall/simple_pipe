@@ -22,7 +22,15 @@ FrameMeta FrameMeta::ShallowCopy() const {
   copy.program_code = program_code;
   copy.detections = detections;
   copy.extensions = extensions;
+  copy.buffer = buffer;
   return copy;
+}
+
+bool FrameMeta::IsEos() const {
+  if (buffer && buffer->eos) {
+    return true;
+  }
+  return extensions.contains("timing") && extensions["timing"].value("eos", false);
 }
 
 }  // namespace simple_pipe

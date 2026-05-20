@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "simple-pipe"
 version = "0.1.0"
-description = "CSPF — Configurable Stream Processing Framework (PM-Pipeline prototype)"
+description = "CSPF — Configurable Stream Processing Framework (standalone reference, C++ primary)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

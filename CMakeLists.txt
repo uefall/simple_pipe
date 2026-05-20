@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(SIMPLE_PIPE_BUILD_TESTS "Build unit tests" ON)
 option(SIMPLE_PIPE_BUILD_SAMPLES "Build sample executables" ON)
+option(SIMPLE_PIPE_WITH_OPENCV "Build OpenCV media readers (image_src/video_src)" ON)
 
 include(FetchContent)
 
@@ -32,6 +33,10 @@ FetchContent_MakeAvailable(nlohmann_json)
 if(SIMPLE_PIPE_BUILD_TESTS)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
+endif()
+
+if(SIMPLE_PIPE_WITH_OPENCV)
+  find_package(OpenCV REQUIRED COMPONENTS core imgcodecs videoio)
 endif()
 
 add_subdirectory(src)

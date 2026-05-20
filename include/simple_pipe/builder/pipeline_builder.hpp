@@ -9,7 +9,7 @@
 #include <nlohmann/json.hpp>
 
 #include "simple_pipe/operators/generic/app_sink.hpp"
-#include "simple_pipe/operators/generic/app_source.hpp"
+#include "simple_pipe/operators/generic/source_operator.hpp"
 #include "simple_pipe/operators/node_registry.hpp"
 #include "simple_pipe/result.hpp"
 #include "simple_pipe/spec/graph_spec.hpp"
@@ -30,7 +30,8 @@ struct FlowChartPipelineSpec {
 };
 
 struct BuiltPipeline {
-  std::shared_ptr<AppSource> source;
+  std::shared_ptr<SourceOperator> source;
+  bool pull_driven = false;
   std::shared_ptr<AppSink> sink;
   std::vector<std::shared_ptr<Operator>> nodes;
   std::unordered_map<std::string, std::shared_ptr<Operator>> node_map;

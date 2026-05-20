@@ -24,7 +24,13 @@ Result<void> Resize::Configure(const nlohmann::json& patch) {
 
 FrameMeta Resize::HandleFrameMeta(const FrameMeta& meta) {
   FrameMeta out = meta.ShallowCopy();
-  out.extensions["resize"] = {{"width", width_}, {"height", height_}};
+  int out_w = width_;
+  int out_h = height_;
+  if (out.buffer && !out.buffer->mat.empty()) {
+    out_w = width_ > 0 ? width_ : out.buffer->mat.cols;
+    out_h = height_ > 0 ? height_ : out.buffer->mat.rows;
+  }
+  out.extensions["resize"] = {{"width", out_w}, {"height", out_h}};
   return out;
 }
 

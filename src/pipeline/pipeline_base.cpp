@@ -96,6 +96,10 @@ Result<void> PipelineBase::PushFrame(const FrameInput& frame) {
   if (!built_) {
     return Result<void>::failure("Pipeline not built");
   }
+  if (built_->pull_driven) {
+    return Result<void>::failure(
+        "PushFrame is not allowed when ingress is pull-driven (image_src/video_src)");
+  }
   built_->source->Inject(FrameMeta::FromInput(frame));
   return Result<void>::success();
 }

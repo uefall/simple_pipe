@@ -1,49 +1,61 @@
 # CSPF 架构说明（simple_pipe）
 
-本仓库将 **PM-Pipeline** 文档中的原型落实为 **C++17** 库（CMake + GTest），命名仍为 **CSPF — Configurable Stream Processing Framework**。
+`simple_pipe` 是 **standalone** 的可配置流处理框架（C++17），不绑定任何厂商 SDK。
+
+## 与 PM-Pipeline 文档的关系
+
+早期讨论中的 **PM-Pipeline / PMSdk / 许可初始化** 等属于另一套产品化方案的描述，**未纳入本仓库**。此处仅保留概念对照（Facade、DAG、双平面配置），便于从设计文档迁移思路，**不是运行时依赖**。
+
+## 依赖边界
+
+| 包含 | 不包含 |
+|------|--------|
+| nlohmann/json（FetchContent） | PMSdk、商业许可网关 |
+| GTest（测试） | Sophon / 厂商 NPU 运行时 |
+| OpenCV（可选，`image_src`/`video_src`） | 业务算法 SO、预编译 pmind 等 |
 
 ## 核心范式
 
 - **Pipeline-and-Filter**：节点链式处理 `FrameMeta`
-- **DAG**：`PipelineGraphSpec.edges` 描述 fan-in / fan-out
-- **Observer**：`meta_flow` 推送至下游 `in_queue`
-- **Facade**：`SimplePipeline` 对外隐藏 builder 与连线
+- **DAG**：`PipelineGraphSpec.edges`
+- **Observer**：`meta_flow` 推送
+- **Facade**：`SimplePipeline`
+
+## Ingress（帧入口）
+
+```text
+Push:  Host → PushFrame → app_src → …
+Pull:  image_src / video_src 内部 Reader 线程 → Inject → …
+```
+
+拓扑规则：**恰好一个** `app_src` | `image_src` | `video_src`。
+
+## 媒体层（OpenCV 第一版）
+
+```text
+IMediaReader
+  ├── OpenCvImageReader   (path / paths / 目录)
+  └── OpenCvVideoReader   (uri / device, target_fps)
+
+PullSource → ImageSource / VideoSource
+FrameMeta.buffer → shared_ptr<FrameBuffer>（cv::Mat）
+```
+
+## 日志模块
+
+`simple_pipe::log::Logger`：线程安全、分级（Debug/Info/Warn/Error）、输出到 stdout/stderr。
 
 ## 会话状态机
 
 ```text
-Unbuilt → Build → Built → Configure → Configured → Start → Running
-Running → PushFrame* → Running → Stop → Stopped
+Unbuilt → Build → Configure → StartPipeline → Running → StopPipeline
 ```
 
-## 数据平面
-
-```text
-PushFrame → AppSource.inject → out_queue → dispatch → downstream.meta_flow
-         → in_queue → handle_frame_meta → out_queue → … → AppSink → callback
-```
-
-Fan-in 节点（如 `mock_tracker`）按 `frame_index` 收集各上游 `_upstream_id` 的 meta，凑齐后合并再处理。
+Pull 模式下 **禁止** `PushFrame`（由 builder 标记 `pull_driven`）。
 
 ## 配置双平面
 
-| 平面 | API / 文件 | 合并 |
-|------|------------|------|
-| Build | `graph/*.json`, `node_defaults/<type>.json`, `init_params` | 浅合并 |
-| Runtime | `PipelineRuntimeConfig` | 按 `node_id` 调用 `Operator.configure` |
-
-## 目录映射（对照 PM-Pipeline）
-
-| PM-Pipeline | simple_pipe (C++) |
-|-------------|-------------------|
-| `pipeline/common/pipeline_graph_spec.h` | `include/simple_pipe/spec/graph_spec.hpp` |
-| `pipeline/common/pipeline_builder.h` | `include/simple_pipe/builder/pipeline_builder.hpp` |
-| `nodes/core/pm_node.h` | `include/simple_pipe/operators/operator.hpp` |
-| `objects/pm_frame_meta.h` | `include/simple_pipe/context/frame_meta.hpp` |
-| `SafetyPipeline` / `QualityPipeline` | `SimplePipeline`（可子类加领域校验） |
-
-## 后续可扩展
-
-- `QualityPipeline` 子类：`push_frame(..., program_code)` + 帧级策略节点
-- 自定义 `TopologyValidator` 注册到 `SimplePipeline.set_topology_validator`
-- C++ 移植：保持 `IGraphSpec` / `IDomainPipeline` / `IOperator` 契约不变
+| 平面 | 内容 |
+|------|------|
+| Build | graph JSON + node_defaults + init_params |
+| Runtime | pipeline_params + node_params（可运行中 patch） |

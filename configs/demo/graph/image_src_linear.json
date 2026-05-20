@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "id": "img_in", "type": "image_src", "init_params": { "path": "PATH_PLACEHOLDER" } },
+    { "id": "resize", "type": "resize", "init_params": { "width": 320, "height": 240 } },
+    { "id": "app_des", "type": "app_des" }
+  ],
+  "edges": [
+    { "to": "resize", "from": ["img_in"] },
+    { "to": "app_des", "from": ["resize"] }
+  ]
+}

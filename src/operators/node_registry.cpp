@@ -4,6 +4,8 @@
 
 #include "simple_pipe/operators/generic/app_sink.hpp"
 #include "simple_pipe/operators/generic/app_source.hpp"
+#include "simple_pipe/operators/generic/image_source.hpp"
+#include "simple_pipe/operators/generic/video_source.hpp"
 #include "simple_pipe/operators/generic/mock_detector.hpp"
 #include "simple_pipe/operators/generic/mock_motion.hpp"
 #include "simple_pipe/operators/generic/mock_safety_rules.hpp"
@@ -20,6 +22,12 @@ NodeFactory DefaultNodeFactory() {
 
   reg("app_src", [](const std::string& id, const std::string&, const nlohmann::json& p) {
     return std::make_shared<AppSource>(id, p);
+  });
+  reg("image_src", [](const std::string& id, const std::string&, const nlohmann::json& p) {
+    return std::make_shared<ImageSource>(id, p);
+  });
+  reg("video_src", [](const std::string& id, const std::string&, const nlohmann::json& p) {
+    return std::make_shared<VideoSource>(id, p);
   });
   reg("app_des", [](const std::string& id, const std::string&, const nlohmann::json& p) {
     return std::make_shared<AppSink>(id, p);

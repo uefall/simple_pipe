@@ -7,6 +7,10 @@ namespace simple_pipe {
 
 namespace {
 
+bool IsIngressType(const std::string& type) {
+  return type == "app_src" || type == "image_src" || type == "video_src";
+}
+
 nlohmann::json ShallowMerge(const nlohmann::json& base, const nlohmann::json& overlay) {
   nlohmann::json merged = base.is_object() ? base : nlohmann::json::object();
   if (overlay.is_object()) {
@@ -81,15 +85,15 @@ Result<void> ValidateFlowChartPipelineSpec(const FlowChartPipelineSpec& spec,
         return Result<void>::failure("Edge references unknown upstream: " + upstream);
       }
     }
-    if (node.type == "app_src" && !node.upstream_ids.empty()) {
-      return Result<void>::failure("app_src must not have upstream edges");
+    if (IsIngressType(node.type) && !node.upstream_ids.empty()) {
+      return Result<void>::failure("ingress source must not have upstream edges: " + node.type);
     }
   }
 
   int source_count = 0;
   int sink_count = 0;
   for (const auto& node : spec.nodes) {
-    if (node.type == "app_src") {
+    if (IsIngressType(node.type)) {
       ++source_count;
     }
     if (node.type == "app_des") {
@@ -97,7 +101,8 @@ Result<void> ValidateFlowChartPipelineSpec(const FlowChartPipelineSpec& spec,
     }
   }
   if (source_count != 1) {
-    return Result<void>::failure("Graph must contain exactly one app_src");
+    return Result<void>::failure(
+        "Graph must contain exactly one ingress source (app_src | image_src | video_src)");
   }
   if (sink_count != 1) {
     return Result<void>::failure("Graph must contain exactly one app_des");
@@ -135,7 +140,10 @@ BuiltPipeline BuildFlowChartPipelineFromSpec(const FlowChartPipelineSpec& spec, 
 
   for (const auto& node : built.nodes) {
     if (node->role() == NodeRole::kSrc) {
-      built.source = std::dynamic_pointer_cast<AppSource>(node);
+      built.source = std::dynamic_pointer_cast<SourceOperator>(node);
+      if (built.source) {
+        built.pull_driven = built.source->PullDriven();
+      }
     }
     if (node->role() == NodeRole::kDes) {
       built.sink = std::dynamic_pointer_cast<AppSink>(node);
@@ -143,7 +151,7 @@ BuiltPipeline BuildFlowChartPipelineFromSpec(const FlowChartPipelineSpec& spec, 
   }
 
   if (!built.source || !built.sink) {
-    throw std::runtime_error("Built graph must have exactly one AppSource and one AppSink");
+    throw std::runtime_error("Built graph must have exactly one ingress source and one AppSink");
   }
   return built;
 }
