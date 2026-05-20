@@ -1,0 +1,10 @@
+{
+  "pipeline_params": {
+    "app_src_in_queue_limit": 8,
+    "app_des_in_queue_limit": 8
+  },
+  "node_params": {
+    "resize": { "width": 1280, "height": 720 },
+    "rules": { "min_score": 0.8 }
+  }
+}

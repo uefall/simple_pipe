@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    { "id": "app_src", "type": "app_src" },
+    { "id": "resize", "type": "resize" },
+    { "id": "detector", "type": "mock_detector" },
+    { "id": "motion", "type": "mock_motion" },
+    { "id": "tracker", "type": "mock_tracker" },
+    { "id": "rules", "type": "mock_safety_rules" },
+    { "id": "app_des", "type": "app_des" }
+  ],
+  "edges": [
+    { "to": "resize", "from": ["app_src"] },
+    { "to": "detector", "from": ["resize"] },
+    { "to": "motion", "from": ["resize"] },
+    { "to": "tracker", "from": ["detector", "motion"] },
+    { "to": "rules", "from": ["tracker"] },
+    { "to": "app_des", "from": ["rules"] }
+  ]
+}

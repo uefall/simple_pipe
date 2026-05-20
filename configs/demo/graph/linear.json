@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "id": "app_src", "type": "app_src" },
+    { "id": "resize", "type": "resize", "init_params": { "width": 320, "height": 240 } },
+    { "id": "app_des", "type": "app_des" }
+  ],
+  "edges": [
+    { "to": "resize", "from": ["app_src"] },
+    { "to": "app_des", "from": ["resize"] }
+  ]
+}
