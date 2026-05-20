@@ -21,6 +21,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest
 python samples/run_demo.py
+python samples/run_five_node_100.py   # 5 节点 × 100 帧 + 运行中 Configure
 ```
 
 ## 最小集成序列

@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    { "id": "app_src", "type": "app_src" },
+    { "id": "resize", "type": "resize", "init_params": { "width": 640, "height": 480 } },
+    { "id": "detector", "type": "mock_detector", "init_params": { "label": "person" } },
+    { "id": "rules", "type": "mock_safety_rules", "init_params": { "min_score": 0.5 } },
+    { "id": "app_des", "type": "app_des" }
+  ],
+  "edges": [
+    { "to": "resize", "from": ["app_src"] },
+    { "to": "detector", "from": ["resize"] },
+    { "to": "rules", "from": ["detector"] },
+    { "to": "app_des", "from": ["rules"] }
+  ]
+}

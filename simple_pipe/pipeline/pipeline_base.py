@@ -100,7 +100,9 @@ class PipelineBase(ABC):
                 return result
 
         self._runtime = runtime
-        self._state = PipelineState.CONFIGURED
+        # 运行中热更新时保持 RUNNING，避免后续 PushFrame 被拒绝
+        if self._state != PipelineState.RUNNING:
+            self._state = PipelineState.CONFIGURED
         return Result.success()
 
     def start(self) -> Result[None]:
