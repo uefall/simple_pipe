@@ -1,3 +1,7 @@
+build/
+cmake-build-*/
+compile_commands.json
+
 __pycache__/
 *.py[cod]
 .pytest_cache/

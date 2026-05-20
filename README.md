@@ -1,60 +1,63 @@
 # simple_pipe
 
-**CSPF（Configurable Stream Processing Framework）** 的轻量实现，抽象自 PM-Pipeline 架构原型：声明式 DAG、异步算子节点、`FrameMeta` 帧级载体、Build / Runtime 双平面配置。
+**CSPF（Configurable Stream Processing Framework）** 的 C++17 实现：声明式 DAG、异步算子节点、`FrameMeta` 帧载体、Build / Runtime 双平面配置。架构抽象自 PM-Pipeline。
 
-## 架构分层
-
-| 层 | 模块 | 说明 |
-|----|------|------|
-| L0 集成 | `samples/` | 推帧、收回调 |
-| L1 门面 | `simple_pipe/pipeline/simple_pipeline.py` | `Build` / `Configure` / `Start` / `PushFrame` |
-| L2 运行时壳 | `pipeline_base.py` | 会话状态机 |
-| L3 装配 | `builder/pipeline_builder.py` | GraphSpec → 可执行节点图 |
-| L4 算子 | `operators/` | `Operator` 基类 + 通用/模拟节点 |
-| L5 载体 | `context/frame_meta.py` | `FrameMeta` / `FrameInput` |
-| L6 配置 | `configs/<domain>/` | graph JSON + node_defaults |
-
-## 快速开始
+## 构建（CMake + GTest）
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-pytest
-python samples/run_demo.py
-python samples/run_five_node_100.py   # 5 节点 × 100 帧 + 运行中 Configure
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+ctest --test-dir build --output-on-failure
 ```
 
-## 最小集成序列
+## 运行示例
 
-```python
-from simple_pipe.context.frame_meta import FrameInput
-from simple_pipe.pipeline.simple_pipeline import SimplePipeline
-from simple_pipe.spec.runtime_config import PipelineRuntimeConfig
-
-pipe = SimplePipeline(defaults_dir="configs/demo/node_defaults")
-pipe.build_from_json("configs/demo/graph/linear.json")
-pipe.configure(PipelineRuntimeConfig.load("configs/demo/runtime.example.json"))
-pipe.set_output_callback(lambda meta: print(meta.extensions))
-pipe.start()
-pipe.push_frame(FrameInput(image="data", frame_index=0))
-pipe.stop()
+```bash
+./build/samples/run_demo_cpp
+./build/samples/run_five_node_100_cpp
 ```
 
-## 扩展新算子
+## 目录结构
 
-1. 继承 `Operator`，实现 `node_role()` 与 `handle_frame_meta()`。
-2. 在 `operators/registry.py` 注册 `type` 字符串。
-3. 在 `configs/<domain>/graph/*.json` 中引用该 `type`。
+```text
+include/simple_pipe/     # 公共头文件
+src/                     # 库实现
+configs/demo/graph/      # 拓扑 JSON（linear / five_node / safety_fanin）
+configs/demo/node_defaults/
+tests/                   # GTest：builder、pipeline、多 graph
+samples/                 # C++ 可执行样例
+```
 
-## 示例拓扑
+## 对外 API（会话式）
 
-- **线性**：`configs/demo/graph/linear.json` — `app_src → resize → app_des`
-- **Safety 风格 fan-in**：`configs/demo/graph/safety_fanin.json` — 检测与运动并行后汇入 tracker
+```cpp
+simple_pipe::SimplePipeline pipeline("configs/demo/node_defaults");
+pipeline.BuildFromJson("configs/demo/graph/five_node.json");
+pipeline.Configure(runtime);
+pipeline.SetOutputCallback([](const FrameMeta& m) { /* ... */ });
+pipeline.StartPipeline();
+pipeline.PushFrame(input);
+pipeline.StopPipeline();
+```
+
+## 示例 Graph
+
+| 文件 | 拓扑 |
+|------|------|
+| `linear.json` | app_src → resize → app_des |
+| `five_node.json` | app_src → resize → detector → rules → app_des |
+| `safety_fanin.json` | 检测 ∥ 运动 → tracker → rules → sink |
+
+## 扩展算子
+
+1. 继承 `Operator`，实现 `role()` 与 `HandleFrameMeta()`
+2. 在 `src/operators/node_registry.cpp` 注册 `type`
+3. 在 `configs/.../graph/*.json` 引用
 
 ## 文档
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 与 PM-Pipeline / CSPF 原型的概念对照
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
-## 许可证
+## 说明
 
-MIT（示例代码）
+仓库中保留的 Python 实现（`simple_pipe/` 包、`pyproject.toml`）为早期参考，**主构建与测试以 C++ 为准**。
