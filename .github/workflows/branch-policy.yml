@@ -1,0 +1,40 @@
+# 检测 main 上的提交是否关联 PR（直推通常无关联 PR）
+# 注意：须在 GitHub 启用分支保护后才能真正阻止直推；本 workflow 用于可见告警。
+name: branch-policy
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  require-pr-association:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check commit is linked to a merged PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sha = context.sha;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner,
+              repo,
+              commit_sha: sha,
+            });
+
+            const merged = prs.filter((pr) => pr.merged_at);
+            if (merged.length === 0) {
+              core.setFailed(
+                'This commit on main is not associated with a merged pull request. ' +
+                  'Do not push directly to main — use a branch and open a PR. ' +
+                  'See CONTRIBUTING.md and .github/BRANCH_PROTECTION.md.'
+              );
+            } else {
+              core.info(`OK: linked to PR #${merged[0].number}`);
+            }
