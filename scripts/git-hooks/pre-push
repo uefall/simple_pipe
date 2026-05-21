@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# 可选本地钩子：禁止向 origin/main 直推
+# 安装：cp scripts/git-hooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+remote="${1:-}"
+url="${2:-}"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [[ "${remote_ref}" == "refs/heads/main" ]]; then
+    echo "error: direct push to main is not allowed." >&2
+    echo "Create a cursor/* branch and open a PR. See CONTRIBUTING.md" >&2
+    exit 1
+  fi
+done
+
+exit 0

@@ -1,9 +1,10 @@
+# PR 到 main 时必须通过；合并到 main 后也会再跑一遍。
 name: build
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
 
 jobs:
@@ -21,7 +22,7 @@ jobs:
       - name: Build and test
         run: |
           chmod +x scripts/build.sh
-          ./scripts/build.sh --platform ubuntu --with-opencv ${{ matrix.opencv }} --test -j 2
+          ./scripts/build.sh --platform ubuntu --with-opencv ${{ matrix.opencv }} --test --jobs 2
 
   macos:
     runs-on: macos-latest
@@ -36,4 +37,4 @@ jobs:
       - name: Build and test
         run: |
           chmod +x scripts/build.sh
-          ./scripts/build.sh --platform macos --with-opencv ${{ matrix.opencv }} --test -j 2
+          ./scripts/build.sh --platform macos --with-opencv ${{ matrix.opencv }} --test --jobs 2

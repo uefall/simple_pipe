@@ -4,6 +4,10 @@
 
 > **说明**：本仓库是通用框架实现，**不包含** PM-Pipeline / PMSdk / Sophon 等商业或旧架构中的第三方 SDK。概念上借鉴了「声明式图 + 节点数据流」思想，但依赖与代码均为 standalone。
 
+## 贡献
+
+**禁止直接向 `main` 推送。** 请从 `main` 拉取 `cursor/` 前缀分支，通过 Pull Request 合并。详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## 依赖
 
 | 依赖 | 用途 | 获取方式 |
