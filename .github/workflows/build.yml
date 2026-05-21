@@ -1,0 +1,39 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        opencv: [ON, OFF]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build libopencv-dev
+      - name: Build and test
+        run: |
+          chmod +x scripts/build.sh
+          ./scripts/build.sh --platform ubuntu --with-opencv ${{ matrix.opencv }} --test -j 2
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        opencv: [ON, OFF]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          brew install cmake ninja opencv
+      - name: Build and test
+        run: |
+          chmod +x scripts/build.sh
+          ./scripts/build.sh --platform macos --with-opencv ${{ matrix.opencv }} --test -j 2

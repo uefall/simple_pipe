@@ -13,19 +13,35 @@
 | [GoogleTest](https://github.com/google/googletest) | 单元测试 | CMake FetchContent（可选） |
 | [OpenCV](https://opencv.org/) | `image_src` / `video_src` Reader | 系统包 `libopencv-dev`（可选，`SIMPLE_PIPE_WITH_OPENCV=ON`） |
 
-## 构建
+## 构建（Ubuntu / macOS）
+
+推荐使用跨平台脚本（详见 [docs/BUILD.md](docs/BUILD.md)）：
 
 ```bash
-sudo apt-get install -y build-essential g++ libopencv-dev   # OpenCV 可选但推荐
-cmake -S . -B build -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-ctest --test-dir build --output-on-failure
+chmod +x scripts/build.sh
+
+# Ubuntu
+./scripts/build.sh --install-deps --test
+
+# macOS (Homebrew)
+./scripts/build.sh --platform macos --install-deps --test
+
+# 无 OpenCV 最小构建
+./scripts/build.sh --with-opencv off --test
 ```
 
-关闭 OpenCV（仅保留 `app_src` 推帧与 mock 节点）：
+手动 CMake 示例：
 
 ```bash
-cmake -S . -B build -DSIMPLE_PIPE_WITH_OPENCV=OFF
+# Ubuntu
+cmake -S . -B build -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j && ctest --test-dir build
+
+# macOS
+cmake -S . -B build -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_PREFIX_PATH="$(brew --prefix)" \
+  -DOpenCV_DIR="$(brew --prefix opencv)/lib/cmake/opencv4"
+cmake --build build -j && ctest --test-dir build
 ```
 
 ## Ingress 节点（帧入口，三选一）

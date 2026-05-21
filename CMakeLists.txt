@@ -37,6 +37,8 @@ endif()
 
 if(SIMPLE_PIPE_WITH_OPENCV)
   find_package(OpenCV REQUIRED COMPONENTS core imgcodecs videoio)
+  message(STATUS "OpenCV version: ${OpenCV_VERSION}")
+  message(STATUS "OpenCV include: ${OpenCV_INCLUDE_DIRS}")
 endif()
 
 add_subdirectory(src)
