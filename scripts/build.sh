@@ -107,7 +107,17 @@ parse_args() {
         CMAKE_EXTRA+=("$2")
         shift 2
         ;;
-      -j|--jobs)
+      -j)
+        if [[ -n "${2:-}" && "$2" =~ ^[0-9]+$ ]]; then
+          JOBS="$2"
+          shift 2
+        else
+          # allow -j8 form
+          JOBS="${1#-j}"
+          shift
+        fi
+        ;;
+      --jobs)
         JOBS="$2"
         shift 2
         ;;
